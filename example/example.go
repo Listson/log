@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"flag"
 
 	"github.com/listson/log"
-	"github.com/natefinch/lumberjack"
 )
 
 var (
@@ -23,42 +23,43 @@ func main() {
 
 	if h {
 		flag.Usage()
+
 		return
 	}
 
+	// logger配置
 	opts := &log.Options{
-		Level:            "info",
+		Level:            "debug",
 		Format:           "console",
-		EnableColor:      false,
-		EnableCaller:     true,
-		//OutputPaths:      []string{"test.log", "stdout"},
-		//ErrorOutputPaths: []string{},
-		Rolling:          true,
-		RollingLog: &lumberjack.Logger{
-			Filename:   "test.log",
-			MaxSize:    1,
-			MaxAge:     10,
-			MaxBackups: 6,
-			LocalTime:  false,
-			Compress:   true,
-		},
+		EnableColor:      true, // if you need output to local path, with EnableColor must be false.
+		OutputPaths:      []string{"test.log", "stdout"},
+		ErrorOutputPaths: []string{"error.log"},
 	}
-
+	// 初始化全局logger
 	log.Init(opts)
 	defer log.Flush()
 
+	// Debug、Info(with field)、Warnf、Errorw使用
 	log.Debug("This is a debug message")
-	log.Info("This is a info message")
-	log.Warn("This is a warn message")
-	log.Error("This is a error message")
+	log.Info("This is a info message", log.Int32("int_key", 10))
+	log.Warnf("This is a formatted %s message", "warn")
+	log.Errorw("Message printed with Errorw", "X-Request-ID", "fbf54504-64da-4088-9b86-67824a7fb508")
 
-	log.Debugf("This is a %s message", "debug")
-	log.Infof("This is a %s message", "info")
-	log.Warnf("This is a %s message", "warn")
-	log.Errorf("This is a %s message", "error")
+	// WithValues使用
+	lv := log.WithValues("X-Request-ID", "7a7b9f24-4cae-4b2a-9464-69088b45b904")
+	lv.Infow("Info message printed with [WithValues] logger")
+	lv.Infow("Debug message printed with [WithValues] logger")
 
-	log.Debug("This is a debug message", log.String("key", "value"))
-	log.Info("This is a info message", log.Int32("key2", 10))
-	log.Warn("This is a warn message", log.Bool("key3", false))
-	log.Error("This is a error message", log.Any("key4", "any"))
+	// Context使用
+	ctx := lv.WithContext(context.Background())
+	lc := log.FromContext(ctx)
+	lc.Info("Message printed with [WithContext] logger")
+
+	ln := lv.WithName("test")
+	ln.Info("Message printed with [WithName] logger")
+
+	// V level使用
+	log.V(log.InfoLevel).Info("This is a V level message")
+	log.V(log.ErrorLevel).
+		Infow("This is a V level message with fields", "X-Request-ID", "7a7b9f24-4cae-4b2a-9464-69088b45b904")
 }

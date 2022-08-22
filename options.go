@@ -30,6 +30,7 @@ const (
 	flagEnableCaller     = "log.enable-caller"
 	flagOutputPaths      = "log.output-paths"
 	flagErrorOutputPaths = "log.error-output-paths"
+	flagDevelopment      = "log.development"
 
 	consoleFormat = "console"
 	jsonFormat    = "json"
@@ -37,13 +38,14 @@ const (
 
 // Options contains configuration items related to log.
 type Options struct {
-	Level            string   `json:"level" mapstructure:"level"`
-	Format           string   `json:"format" mapstructure:"format"`
-	EnableColor      bool     `json:"enable-color" mapstructure:"enable-color"`
-	EnableCaller     bool     `json:"enable-caller" mapstructure:"enable-caller"`
-	OutputPaths      []string `json:"output-paths" mapstructure:"output-paths"`
-	ErrorOutputPaths []string `json:"error-output-paths" mapstructure:"error-output-paths"`
-	Rolling          bool     `json:"rolling" mapstructure:"rolling"`
+	Level            string             `json:"level" mapstructure:"level"`
+	Format           string             `json:"format" mapstructure:"format"`
+	EnableColor      bool               `json:"enable-color" mapstructure:"enable-color"`
+	EnableCaller     bool               `json:"enable-caller" mapstructure:"enable-caller"`
+	OutputPaths      []string           `json:"output-paths" mapstructure:"output-paths"`
+	ErrorOutputPaths []string           `json:"error-output-paths" mapstructure:"error-output-paths"`
+	Development      bool               `json:"development"        mapstructure:"development"`
+	Rolling          bool               `json:"rolling" mapstructure:"rolling"`
 	RollingLog       *lumberjack.Logger `json:"rolling-log" mapstructure:"rolling-log"`
 }
 
@@ -54,6 +56,7 @@ func NewOptions() *Options {
 		Format:           consoleFormat,
 		EnableColor:      false,
 		EnableCaller:     false,
+		Development:      false,
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
 	}
@@ -84,6 +87,13 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&o.EnableCaller, flagEnableCaller, o.EnableCaller, "Enable output of caller information in the log.")
 	fs.StringSliceVar(&o.OutputPaths, flagOutputPaths, o.OutputPaths, "Output paths of log.")
 	fs.StringSliceVar(&o.ErrorOutputPaths, flagErrorOutputPaths, o.ErrorOutputPaths, "Error output paths of log.")
+	fs.BoolVar(
+		&o.Development,
+		flagDevelopment,
+		o.Development,
+		"Development puts the logger in development mode, which changes "+
+			"the behavior of DPanicLevel and takes stacktraces more liberally.",
+	)
 }
 
 func (o *Options) String() string {

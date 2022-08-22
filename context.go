@@ -24,6 +24,11 @@ const (
 )
 
 // WithContext returns a copy of context in which the log value is set.
+func WithContext(ctx context.Context) context.Context {
+	return std.WithContext(ctx)
+}
+
+// WithContext returns a copy of context in which the log value is set.
 func (l *zapLogger) WithContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, logContextKey, l)
 }
